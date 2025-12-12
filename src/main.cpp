@@ -1,20 +1,32 @@
 #include "NodoGrafo.h"
 #include "ArbolBPlus.h"
+#include "NodoDirectorio.h"
+#include "NodoArchivo.h"
 #include <iostream>
 using namespace std;
-ArbolBPlus* arbol = new ArbolBPlus(); 
+ArbolBPlus* arbol = new ArbolBPlus(4); 
 
-NodoBPlusBase* insertar_nodo_grafo(int clave, NodoGrafo* nodo) {
-    arbol->insertar(clave, nodo);
-}
 
-NodoGrafo* buscar_nodo_grafo(int clave){
-    return arbol->buscar(clave);
+void buscar_nodo(int clave){
+    int accesos = 0; 
+    NodoGrafo* nodo = arbol->buscar_nodo_grafo(clave, accesos);
+    if(nodo){
+        cout<<"- Node ID: "<<clave<<endl;
+        cout<<"- Access B+: "<<accesos<<endl;
+        if(nodo->es_directorio()) {
+            cout<<"- Type: Directory"<<endl;
+        } else {
+            cout<<"- Type: Archive"<<endl;
+        }
+    } else {
+        cout<<"Node NOT found"<<endl;
+        cout<< "- Access B+: " << accesos << endl;
+    }
 }
 
 void crear_nodo(int id_padre) {
     // ver si existe el padre
-    int accesos = 0;
+    int accesos = 0; 
     NodoGrafo* padre = arbol->buscar_nodo_grafo(id_padre, accesos);
     if (!padre) {
         cout<<"The parent directory doesn't exist." <<endl;
@@ -33,7 +45,7 @@ void crear_nodo(int id_padre) {
     NodoGrafo* nuevo;
     if(es_directorio == 1) {
         nuevo = new NodoDirectorio(nuevo_id); //corresponde a un nodo directorio
-    } els{
+    }else{
         cout<<"- File Size: "; 
         int tam;cin >>tam;
         cout << "- File type (0: Image; 1: Document; 2: Executable; 3: Video; 4: Compressed): ";
@@ -45,7 +57,8 @@ void crear_nodo(int id_padre) {
     arbol->insertar_nodo_grafo(nuevo_id, nuevo);
 
     // agregar hijo en el directorio padre
-    int* hijos = padre->lista_hijos();
+    NodoDirectorio* dir = (NodoDirectorio*) padre; 
+    int* hijos = dir->lista_hijos();
     for(int i = 0; i<20; i++) {
         if (hijos[i] == -1) { // primera casilla libre
             hijos[i] =nuevo_id;
@@ -63,12 +76,11 @@ void crear_nodo(int id_padre) {
     cout << "Node created successfully."<<endl;
 }
 
-
 void eliminar_archivo(int id_archivo, int id_directorio_padre) {
     int accesos = 0;
     NodoGrafo* archivo = arbol->buscar_nodo_grafo(id_archivo,accesos);
     NodoGrafo* padre = arbol->buscar_nodo_grafo(id_directorio_padre,accesos);
-    if (!archivo || archivo->es_directorio()) {
+    if (!archivo || !archivo->es_directorio()) {
         cout << "The archive doesn't exist/isn't directory."<<endl;
         return;
     }
@@ -76,9 +88,10 @@ void eliminar_archivo(int id_archivo, int id_directorio_padre) {
         cout<<"The father doesn't exist/isn't directory."<<endl;
         return;
     }
-
+    // se sigue sólo si es que el padre es directorio
+    NodoDirectorio* dir = (NodoDirectorio*) padre; 
     //eliminar desde los hijos 
-    int* hijos = padre->lista_hijos();
+    int* hijos = dir->lista_hijos();
     for (int i = 0; i < 20; i++) {
         if (hijos[i] == id_archivo) {
             hijos[i] = -1;
@@ -115,19 +128,20 @@ void listar_contenido(int id_directorio) {
         cout << "The node doesn't exist/isn't directory."<<endl;
         return;
     }
-    int* hijos = dir->lista_hijos();
+    NodoDirectorio* dir2 = (NodoDirectorio*) dir; 
+    int* hijos = dir2->lista_hijos();
     cout << "Directory contents (" << id_directorio << "):"<<endl;
 
     for(int i = 0; i <20; i++) {
         if (hijos[i] != -1) {
             int accesos2 = 0;
             NodoGrafo* hijo = arbol->buscar_nodo_grafo(hijos[i], accesos2);
-            if (!hijo) continue;
-            cout << "- ID: "<< hijos[i];
-            if (hijo->es_directorio()) {
+            if(!hijo) continue;
+            cout <<"- ID: "<< hijos[i];
+            if(hijo->es_directorio()) {
                 cout << " - Directory";
-            } else {
-                cout << "  - Archive";
+            } else{
+                cout <<"  - Archive";
             }
             cout <<endl;
         }
@@ -166,18 +180,18 @@ int main(){
             cout<<"- Node ID: ";
             cin>>clave;
             NodoGrafo* nodo_grafo = new NodoGrafo(clave); 
-            insertar_nodo_grafo(clave, nodo_grafo);
-        };
+            arbol->insertar_nodo_grafo(clave, nodo_grafo);
+        }
         else if(op=="2"){  
             cout<<"- Node ID: ";
             int clave; cin>>clave;
-            buscar_nodo_grafo(clave);
-        };
+            buscar_nodo(clave);
+        }
         else if(op=="3"){
             cout<<"- Parent Node ID: ";
             int id_padre;cin>>id_padre;
             crear_nodo(id_padre);
-        };
+        }
         else if(op == "4"){
             int id_archivo, id_directorio_padre;
             cout<<"- File ID: ";
@@ -185,22 +199,22 @@ int main(){
             cout<<"- Parent directory ID: ";
             cin>>id_directorio_padre;
             eliminar_archivo(id_archivo,id_directorio_padre);
-        }; 
+        }
         else if(op == "5"){
             cout<<"- Directory ID: ";
             int id_directorio;cin>>id_directorio;
             listar_contenido(id_directorio);
-        }; 
+        }
         else if(op == "6"){
             cout<<"- File ID: ";
             int id_archivo;cin>>id_archivo;
             obtener_rutas_completas(id_archivo);
-        };
+        }
         else if(op == "7"){
             cout<<"- Directory ID";
             int id_directorio;cin>>id_directorio;
             calcular_espacio_ocupado(id_directorio);
-        };
+        }
         else if(op == "8"){
             cout<<"See u later!"<<endl;
         }else{

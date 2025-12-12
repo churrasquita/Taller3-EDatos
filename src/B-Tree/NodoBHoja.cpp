@@ -16,7 +16,7 @@ void NodoBHoja::insertar_en_hoja(int clave, NodoGrafo* nodo){
     int n = get_num_claves();
     int i = n-1;
     // desplazar para insertar en orden creciente
-    while(i >=0 &&getClaves()[i] >clave) {
+    while(i >=0 &&get_claves()[i] >clave) {
         get_claves()[i+1] = get_claves()[i];
         datos[i+1] = datos[i];
         i--;

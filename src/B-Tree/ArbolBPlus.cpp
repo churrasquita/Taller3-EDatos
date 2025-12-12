@@ -8,7 +8,7 @@ NodoGrafo* ArbolBPlus::buscar_nodo_grafo(int clave, int &accesos){
     accesos = 0;
     if(!raiz) return nullptr;
     NodoBPlusBase* nodo = raiz;
-    while(!nodo->es_hoja()){
+    while(!nodo->es_Hoja()){
         accesos++;
         NodoBInterno* interno = (NodoBInterno*)nodo;
         int id= interno->buscar_siguiente(clave); //si es un nodo interno, se busca el siguiente para insertar
@@ -34,8 +34,8 @@ NodoBHoja* ArbolBPlus::buscar_hoja(int clave, int &accesos){
     accesos = 0;
     if (!raiz) return nullptr;
     NodoBPlusBase* actual = raiz;
-    while (actual && !actual->es_hoja()) {
-        ++accesos;
+    while (actual && !actual->es_Hoja()) {
+        accesos++;
         NodoBInterno* interno = (NodoBInterno*)actual;
         int id = interno->buscar_siguiente(clave);
         actual = interno->get_punteros()[id];
@@ -79,7 +79,7 @@ void ArbolBPlus::split_interno(NodoBInterno* interno, int &clave_nueva, NodoBPlu
 
         nuevo->set_num_claves(nuevo->get_num_claves()+1); // se aumenta la cant de claves en 1
     }
-    nuevo->get_punteros()[nuevo->get_num_claves()] = interno->get_punteros()[n+1] //puntero final
+    nuevo->get_punteros()[nuevo->get_num_claves()] = interno->get_punteros()[n+1];//puntero final
     clave_nueva = interno->get_claves()[mitad]; // es el padre
 
     interno->set_num_claves(mitad);
@@ -87,7 +87,7 @@ void ArbolBPlus::split_interno(NodoBInterno* interno, int &clave_nueva, NodoBPlu
 }
 
 //inserta el NodoGrafo completo en la hoja del Árbol B+, usando la clave (ID) como índice.
-void ArbolBPlus::insertar_nodo_grafo(int clave, NodoGrafo* nodo) {
+void ArbolBPlus::insertar_nodo_grafo(int clave, NodoGrafo* nodo_grafo) {
     if (!raiz) {
         NodoBHoja* hoja = new NodoBHoja(orden);
         hoja->get_claves()[0] = clave;
@@ -117,7 +117,7 @@ void ArbolBPlus::insertar_nodo_grafo(int clave, NodoGrafo* nodo) {
 }
 
 NodoBPlusBase* ArbolBPlus::buscar_padre_rec(NodoBPlusBase* actual, NodoBPlusBase* hijo){
-    if (!actual || actual->es_hoja()) return nullptr;
+    if (!actual || actual->es_Hoja()) return nullptr;
     NodoBInterno* interno = (NodoBInterno*)actual;
     int n = interno->get_num_claves(); //variabla que guarda la cantidad de claves
     NodoBPlusBase** punteros = interno->get_punteros(); 
@@ -129,6 +129,83 @@ NodoBPlusBase* ArbolBPlus::buscar_padre_rec(NodoBPlusBase* actual, NodoBPlusBase
         }
     }
     return nullptr;
+}
+
+void ArbolBPlus::eliminar(int clave) {
+    if (!raiz) return;
+    int accesos = 0;
+    NodoBHoja* hoja = buscar_hoja(clave,accesos);
+    int* claves = hoja->get_claves();
+    NodoGrafo** datos = hoja->get_datos();
+    int n = hoja->get_num_claves();
+
+    int pos = -1; //posición dentro del árbol
+    for (int i = 0; i<n; i++){
+        if (claves[i] == clave) {
+            pos = i;
+            break;
+        }
+    }
+    if (pos == -1) return; // no existe
+
+    // dezplazamos a la izquierda
+    for(int i=pos; i <n-1; i++) {
+        claves[i] = claves[i+1];
+        datos[i] = datos[i+1];
+    }
+    // último queda vacío
+    claves[n-1] = 0;
+    datos[n-1] = nullptr;
+    hoja->set_num_claves(n-1);
+    // caso si es que la raíz queda vacía
+    if (hoja==raiz && hoja->get_num_claves() == 0) {
+        delete raiz;
+        raiz = nullptr;
+    }
+}
+
+void ArbolBPlus::insertar_en_padre(NodoBPlusBase* nodo,int clave, NodoBPlusBase* nuevo_hijo){
+    //si es la raíz
+    if (nodo==raiz){
+        NodoBInterno* nueva_raiz = new NodoBInterno(orden);
+        nueva_raiz->get_claves()[0] = clave;
+        nueva_raiz->set_num_claves(1);
+        nueva_raiz->get_punteros()[0] =nodo;
+        nueva_raiz->get_punteros()[1] = nuevo_hijo;
+        raiz = nueva_raiz;
+        return;
+    }
+    // buscar el padre real
+    NodoBPlusBase* padre = buscar_padre_rec(raiz, nodo);
+    NodoBInterno* p = (NodoBInterno*)padre; //casting
+
+    int* claves = p->get_claves();
+    NodoBPlusBase** punteros = p->get_punteros();
+    int n = p->get_num_claves();
+
+    // insertar clave y nuevo_hijo en posición ordenada
+    int i = 0;
+    while(i<n && claves[i]<clave){
+        i++;
+    }
+
+    for(int j=n; j>i;j--){
+        claves[j] = claves[j-1];
+        punteros[j+1] = punteros[j];
+    }
+    claves[i] = clave;
+    punteros[i+1] = nuevo_hijo;
+    p->set_num_claves(n+1);
+    //si no está lleno
+    if (p->get_num_claves() <= orden){
+        return;
+    }
+    // si se llenó hay que hacer split
+    int clave_promovida;
+    NodoBPlusBase* nuevo_nodo;
+    split_interno(p, clave_promovida, nuevo_nodo);
+    //se sigue de forma recursiva hacia arriba
+    insertar_en_padre(p, clave_promovida, nuevo_nodo);
 }
 
 ArbolBPlus::~ArbolBPlus(){}

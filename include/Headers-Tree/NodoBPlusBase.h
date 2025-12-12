@@ -10,7 +10,7 @@ class NodoBPlusBase {
         NodoBPlusBase(int orden, bool esHoja);
         int* get_claves();
         int get_orden();
-        bool es_hoja();
+        bool es_Hoja();
         int get_num_claves();
         void set_num_claves(int cant_claves);
         ~NodoBPlusBase();

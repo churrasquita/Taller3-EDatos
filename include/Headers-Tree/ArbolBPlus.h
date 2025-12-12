@@ -19,6 +19,7 @@ class ArbolBPlus {
         //se realizan en la clase ya que corresponde a datos que debería manejar dicha estructura, no acceder desde el main
         void insertar_nodo_grafo(int clave, NodoGrafo* nodo_grafo); 
         NodoGrafo* buscar_nodo_grafo(int clave, int &accesos);
+        void eliminar(int clave);
         ~ArbolBPlus(); 
 };
 

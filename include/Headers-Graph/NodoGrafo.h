@@ -2,9 +2,13 @@
 class NodoGrafo{
     private:
         int id;
+        int* padres;
+        int cant_padres;
     public:
         NodoGrafo(int id);
-        bool es_directorio(); //verifica que sea directorio
+        virtual bool es_directorio(); //verifica que sea directorio
         int* lista_padres();
-        ~NodoGrafo(); 
+        void agregar_padre(int padre);
+        int get_id();
+        virtual ~NodoGrafo();
 };
