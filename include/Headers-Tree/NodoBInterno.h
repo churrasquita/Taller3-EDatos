@@ -4,9 +4,10 @@
 class NodoBInterno:public NodoBPlusBase {
     private:
         NodoBPlusBase** punteros;
-        int buscar_siguiente();
     public:
         NodoBInterno(int orden);
+        NodoBPlusBase** get_punteros();
+        int buscar_siguiente(int clave);
         ~NodoBInterno();
 };
 

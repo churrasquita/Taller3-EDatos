@@ -4,10 +4,10 @@ NodoGrafo::NodoGrafo(int id){
     this->id = id;
 }
 bool NodoGrafo::es_directorio(){
-    return false; //arreglar
+    return false; 
 }
 int* NodoGrafo:: lista_padres(){
-    return nullptr; //arreglar 
+    return nullptr; 
 }
 NodoGrafo::~NodoGrafo(){}
 
