@@ -6,7 +6,6 @@
 using namespace std;
 ArbolBPlus* arbol = new ArbolBPlus(4); 
 
-
 void buscar_nodo(int clave){
     int accesos = 0; 
     NodoGrafo* nodo = arbol->buscar_nodo_grafo(clave, accesos);
@@ -57,67 +56,61 @@ void crear_nodo(int id_padre) {
     arbol->insertar_nodo_grafo(nuevo_id, nuevo);
 
     // agregar hijo en el directorio padre
-    NodoDirectorio* dir = (NodoDirectorio*) padre; 
-    int* hijos = dir->lista_hijos();
-    for(int i = 0; i<20; i++) {
-        if (hijos[i] == -1) { // primera casilla libre
-            hijos[i] =nuevo_id;
-            break;
-        }
-    }
-    // agregar padre al nuevo nodo
-    int* padres = nuevo->lista_padres();
-    for(int i = 0; i <20; i++) {
-        if(padres[i] ==-1) {
-            padres[i] = id_padre;
-            break;
-        }
-    }
+    arbol->insertar_nodo_grafo(nuevo_id, nuevo);
+
+    NodoDirectorio* pd = (NodoDirectorio*)padre;
+    pd->agregar_hijo(nuevo_id);
     cout << "Node created successfully."<<endl;
 }
 
 void eliminar_archivo(int id_archivo, int id_directorio_padre) {
     int accesos = 0;
-    NodoGrafo* archivo = arbol->buscar_nodo_grafo(id_archivo,accesos);
-    NodoGrafo* padre = arbol->buscar_nodo_grafo(id_directorio_padre,accesos);
-    if (!archivo || !archivo->es_directorio()) {
-        cout << "The archive doesn't exist/isn't directory."<<endl;
+    NodoGrafo* archivo = arbol->buscar_nodo_grafo(id_archivo, accesos);
+    if (!archivo) {
+        cout << "File not found."<<endl;
         return;
     }
-    if (!padre ||!padre->es_directorio()) {
-        cout<<"The father doesn't exist/isn't directory."<<endl;
+
+    if (archivo->es_directorio()) {
+        cout << "The ID corresponds to a directory, not a file."<<endl;
         return;
     }
-    // se sigue sólo si es que el padre es directorio
-    NodoDirectorio* dir = (NodoDirectorio*) padre; 
-    //eliminar desde los hijos 
-    int* hijos = dir->lista_hijos();
-    for (int i = 0; i < 20; i++) {
-        if (hijos[i] == id_archivo) {
-            hijos[i] = -1;
-            break;
+
+    NodoGrafo* padre = arbol->buscar_nodo_grafo(id_directorio_padre, accesos);
+    if (!padre || !padre->es_directorio()) {
+        cout <<"Parent directory not found."<<endl;
+        return;
+    }
+    // eliminar id_archivo   
+    NodoDirectorio* pd = (NodoDirectorio*)padre;
+    int* hijos = pd->lista_hijos();
+    if (hijos) {
+        // reconstruir lista sin el archivo
+        for (int i = 0; hijos[i] != -1; i++) {
+            if (hijos[i] == id_archivo) {
+                hijos[i] = -1;//eliminado
+            }
         }
+        // eliminar el arreglo
+        delete[] hijos;
     }
-    //eliminar archivos
+    //eliminar referencia del padre
     int* padres = archivo->lista_padres();
-    for(int i = 0; i <20;i++) {
-        if (padres[i] == id_directorio_padre) {
-            padres[i] = -1;
-            break;
+    bool tiene_otros = false;
+    for(int i = 0; padres[i] !=-1;i++) {
+        if(padres[i] !=id_directorio_padre) {
+            tiene_otros = true;
         }
     }
-    bool tiene_padre = false;
-    for(int i = 0; i <20;i++) {
-        if (padres[i] !=-1) {
-            tiene_padre = true;
-            break;
-        }
+    delete[] padres;
+
+    //borrar del B+
+    if(!tiene_otros) {
+        arbol->eliminar(id_archivo);
+        cout << "File deleted completely.\n";
+    } else {
+        cout << "Parent reference removed.\n";
     }
-    if (!tiene_padre) {
-        cout << "The file has no more parents"<<endl;
-        arbol->eliminar(id_archivo); 
-    }
-    cout << "The file has been deleted succesfully."<<endl;
 }
 
 //método que busca en el directorio del árbol
@@ -130,23 +123,23 @@ void listar_contenido(int id_directorio) {
     }
     NodoDirectorio* dir2 = (NodoDirectorio*) dir; 
     int* hijos = dir2->lista_hijos();
-    cout << "Directory contents (" << id_directorio << "):"<<endl;
-
-    for(int i = 0; i <20; i++) {
-        if (hijos[i] != -1) {
-            int accesos2 = 0;
-            NodoGrafo* hijo = arbol->buscar_nodo_grafo(hijos[i], accesos2);
-            if(!hijo) continue;
-            cout <<"- ID: "<< hijos[i];
-            if(hijo->es_directorio()) {
-                cout << " - Directory";
-            } else{
-                cout <<"  - Archive";
-            }
-            cout <<endl;
-        }
+    if (!hijos) {
+        cout << "Directory is empty.\n";
+        return;
     }
-    cout << endl;
+    cout << "Contents of directory " << id_directorio << ":\n";
+    for (int i = 0; hijos[i] != -1; i++) {
+        int hijo_id = hijos[i];
+        int accesos2 = 0;
+        NodoGrafo* hijo = arbol->buscar_nodo_grafo(hijo_id, accesos2);
+        if (!hijo) continue;
+        cout << "- ID: " << hijo_id;
+        if (hijo->es_directorio())
+            cout << "  (Directory)\n";
+        else
+            cout << "  (File)\n";
+    }
+    delete[] hijos;
 }
 
 string* obtener_rutas_completas(int id_archivo){
