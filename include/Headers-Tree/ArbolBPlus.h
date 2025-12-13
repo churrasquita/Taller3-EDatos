@@ -1,9 +1,10 @@
 #pragma once
-
 #include "NodoBPlusBase.h"
 #include "NodoBHoja.h"
 #include "NodoBInterno.h"
 #include "NodoGrafo.h"
+#include <iostream>
+#include <string>
 
 class ArbolBPlus {
     private:
@@ -20,6 +21,8 @@ class ArbolBPlus {
         void insertar_nodo_grafo(int clave, NodoGrafo* nodo_grafo); 
         NodoGrafo* buscar_nodo_grafo(int clave, int &accesos);
         void eliminar(int clave);
+        std::string* obtener_rutas_completas(int id_archivo);
+        int calcular_espacio_ocupado(int id_directorio);
         ~ArbolBPlus(); 
 };
 

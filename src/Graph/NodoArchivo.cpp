@@ -5,4 +5,9 @@ NodoArchivo::NodoArchivo(int id, int tamaño, int tipo):NodoGrafo(id),tamaño(ta
 bool NodoArchivo::es_directorio() {
     return false;
 }
+
+int NodoArchivo::get_tamano() {
+    return tamaño;
+}
+
 NodoArchivo::~NodoArchivo() {}

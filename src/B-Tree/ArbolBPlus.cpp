@@ -1,9 +1,15 @@
 #include "ArbolBPlus.h"
+#include "Nododirectorio.h"
+#include "NodoDirectorio.h"
+#include "NodoArchivo.h"
 #include <iostream>
+#include <string>
+
 ArbolBPlus::ArbolBPlus(int orden){
     this->orden = orden;
     this->raiz = nullptr;
 }
+
 NodoGrafo* ArbolBPlus::buscar_nodo_grafo(int clave, int &accesos){
     accesos = 0;
     if(!raiz) return nullptr;
@@ -207,5 +213,61 @@ void ArbolBPlus::insertar_en_padre(NodoBPlusBase* nodo,int clave, NodoBPlusBase*
     //se sigue de forma recursiva hacia arriba
     insertar_en_padre(p, clave_promovida, nuevo_nodo);
 }
+
+std::string* ArbolBPlus::obtener_rutas_completas(int id_archivo) {
+    int accesos = 0;
+    NodoGrafo* nodo = buscar_nodo_grafo(id_archivo, accesos);
+    if (!nodo) return nullptr;
+    int* padres = nodo->lista_padres();
+    // nodo raíz
+    if(padres[0] == -1) {
+        std::string* rutas = new std::string[2];
+        rutas[0] = std::to_string(id_archivo);
+        rutas[1] = "";  
+        delete[] padres;
+        return rutas;
+    }
+    // cantidad de padres
+    int cant_padres = 0;
+    while (padres[cant_padres] != -1) cant_padres++;
+    // arreglo tamaño grande auxiliar
+    std::string* rutas_finales = new std::string[50];
+    for(int i = 0; i<50;i++){
+        rutas_finales[i] = "";
+    }
+    int id = 0;
+    for(int i = 0; i <cant_padres; i++) {
+        std::string* rutas_padre=obtener_rutas_completas(padres[i]);
+        if (!rutas_padre)continue;
+        for (int j = 0; rutas_padre[j]!= ""; j++) {
+            rutas_finales[id++] =
+                rutas_padre[j] + "/" + std::to_string(id_archivo);
+        }
+        delete[] rutas_padre;
+    }
+    delete[] padres;
+    return rutas_finales;
+}
+
+int ArbolBPlus::calcular_espacio_ocupado(int id_directorio) {
+    int accesos = 0;
+    NodoGrafo* nodo = buscar_nodo_grafo(id_directorio, accesos);
+    if (!nodo) return 0;
+    // si no es directorio, devolver su tamaño
+    if (!nodo->es_directorio()) {
+        NodoArchivo* arch = (NodoArchivo*) nodo;
+        return arch->get_tamano(); 
+    }
+    // sino, recorrer hijos
+    NodoDirectorio* dir = (NodoDirectorio*) nodo; //casting
+    int* hijos = dir->lista_hijos();
+    int total = 0;
+    for(int i = 0;hijos[i] !=-1;i++){
+        total += calcular_espacio_ocupado(hijos[i]);
+    }
+    delete[] hijos;
+    return total;
+}
+
 
 ArbolBPlus::~ArbolBPlus(){}

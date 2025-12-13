@@ -8,6 +8,7 @@ class NodoArchivo:public NodoGrafo {
     public:
         NodoArchivo(int id, int tamaño, int tipo);
         bool es_directorio();
+        int get_tamano(); 
         ~NodoArchivo();
 };
 

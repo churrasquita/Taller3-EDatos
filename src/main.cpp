@@ -10,6 +10,7 @@ void buscar_nodo(int clave){
     int accesos = 0; 
     NodoGrafo* nodo = arbol->buscar_nodo_grafo(clave, accesos);
     if(nodo){
+        cout<<"Found! "<<clave<<endl;
         cout<<"- Node ID: "<<clave<<endl;
         cout<<"- Access B+: "<<accesos<<endl;
         if(nodo->es_directorio()) {
@@ -142,11 +143,11 @@ void listar_contenido(int id_directorio) {
     delete[] hijos;
 }
 
-string* obtener_rutas_completas(int id_archivo){
-    return nullptr;
+string* obtener_rutas(int id_archivo){
+    return arbol->obtener_rutas_completas(id_archivo);
 }
-int calcular_espacio_ocupado(int id_directorio){
-    return 0; 
+int calcular_espacio(int id_directorio){
+    return arbol->calcular_espacio_ocupado(id_directorio);
 }
 
 int main(){
@@ -201,12 +202,14 @@ int main(){
         else if(op == "6"){
             cout<<"- File ID: ";
             int id_archivo;cin>>id_archivo;
-            obtener_rutas_completas(id_archivo);
+            cout<<"- Routes: ";
+            cout<<obtener_rutas(id_archivo)<<endl;
         }
         else if(op == "7"){
-            cout<<"- Directory ID";
+            cout<<"- Directory ID: ";
             int id_directorio;cin>>id_directorio;
-            calcular_espacio_ocupado(id_directorio);
+            cout<<"- space occupied: ";
+            cout<<calcular_espacio(id_directorio)<<endl;
         }
         else if(op == "8"){
             cout<<"See u later!"<<endl;
